@@ -1,0 +1,15 @@
+1)How will you achieve this in AI?
+
+Based on employee behaviour can predict
+
+2) Find out the 3 -Stage of Problem Identification
+stage 1: ML 
+stage 2: Supervised Learning 
+stage 3: Classification 
+
+3)Name the project
+Employee monitiring
+
+4)Create the dummy Dataset
+Heading
+EID | EXP | Salary | login_time | Role |  attedence | performance | emp_survey
