@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { normalizeResponse } from "./utils/response.js";
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000"
@@ -28,10 +29,11 @@ function ProductCard({ product }) {
   return (
     <article className="product-card">
       <div className="product-card__topline">
-        <span>{product.category || product.brand || "Product"}</span>
+        <span>{product.category || "Product"}</span>
         {product.rating != null && <span>★ {product.rating}</span>}
       </div>
       <h3>{product.name || "Recommended product"}</h3>
+      {product.brand && <p className="product-brand">by {product.brand}</p>}
       {product.description && <p>{product.description}</p>}
       {Array.isArray(product.features) && product.features.length > 0 && (
         <div className="feature-list">
@@ -41,7 +43,10 @@ function ProductCard({ product }) {
         </div>
       )}
       <div className="product-card__footer">
-        <span>{product.model_number || product.warranty || ""}</span>
+        <div>
+          {product.model_number && <span>{product.model_number}</span>}
+          {product.warranty && <span>{product.warranty} warranty</span>}
+        </div>
         {product.price != null && (
           <strong>
             {new Intl.NumberFormat("en-US", {
@@ -57,6 +62,8 @@ function ProductCard({ product }) {
 
 function Message({ item }) {
   const isUser = item.role === "user";
+  const hasProducts =
+    !isUser && Array.isArray(item.data) && item.data.length > 0;
 
   return (
     <div className={`message-row ${isUser ? "message-row--user" : ""}`}>
@@ -65,17 +72,30 @@ function Message({ item }) {
           <SparkIcon />
         </div>
       )}
-      <div className={`message ${isUser ? "message--user" : "message--assistant"}`}>
+      <div
+        className={`message ${
+          isUser
+            ? "message--user"
+            : `message--assistant ${hasProducts ? "" : "message--text-answer"}`
+        }`}
+      >
+        {!isUser && !hasProducts && <span className="answer-label">ANSWER</span>}
         <p>{item.text}</p>
-        {!isUser && Array.isArray(item.data) && item.data.length > 0 && (
-          <div className="product-grid">
-            {item.data.map((product, index) => (
-              <ProductCard
-                key={product?.model_number || product?.name || index}
-                product={product}
-              />
-            ))}
-          </div>
+        {hasProducts && (
+          <section className="results" aria-label="Products returned by the assistant">
+            <div className="results__header">
+              <span>PRODUCTS</span>
+              <strong>{item.data.length} found</strong>
+            </div>
+            <div className="product-grid">
+              {item.data.map((product, index) => (
+                <ProductCard
+                  key={product?.model_number || product?.name || index}
+                  product={product}
+                />
+              ))}
+            </div>
+          </section>
         )}
       </div>
     </div>
@@ -144,13 +164,15 @@ export default function App() {
         );
       }
 
+      const normalizedResponse = normalizeResponse(payload);
+
       setMessages((current) => [
         ...current,
         {
           role: "assistant",
-          text: payload?.message || "I received the response.",
-          data: Array.isArray(payload?.data) ? payload.data : [],
-          status: payload?.status,
+          text: normalizedResponse.message,
+          data: normalizedResponse.products,
+          status: normalizedResponse.status,
         },
       ]);
     } catch (error) {
