@@ -24,7 +24,10 @@ function extractCustomerResponse(value) {
     /response\s+to\s+(?:the\s+)?user\s*:\s*#{0,4}\s*([\s\S]*)$/i,
   );
 
-  return (customerResponse?.[1] || cleanedValue).trim();
+  return (customerResponse?.[1] || cleanedValue)
+    .trim()
+    .replace(/^#{1,6}[ \t]*(?:\r?\n)+/, "")
+    .trim();
 }
 
 export function normalizeResponse(payload) {

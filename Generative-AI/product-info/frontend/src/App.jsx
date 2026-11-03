@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { normalizeResponse } from "./utils/response.js";
 
 const API_BASE_URL = (
@@ -18,6 +20,23 @@ function SparkIcon() {
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M12 3.5 13.7 8a3.7 3.7 0 0 0 2.3 2.3l4.5 1.7-4.5 1.7a3.7 3.7 0 0 0-2.3 2.3L12 20.5 10.3 16A3.7 3.7 0 0 0 8 13.7L3.5 12 8 10.3A3.7 3.7 0 0 0 10.3 8L12 3.5Z" />
     </svg>
+  );
+}
+
+function MarkdownContent({ children }) {
+  return (
+    <div className="markdown-content">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          a: (props) => (
+            <a {...props} target="_blank" rel="noreferrer noopener" />
+          ),
+        }}
+      >
+        {children}
+      </ReactMarkdown>
+    </div>
   );
 }
 
@@ -80,7 +99,7 @@ function Message({ item }) {
         }`}
       >
         {!isUser && !hasProducts && <span className="answer-label">ANSWER</span>}
-        <p>{item.text}</p>
+        {isUser ? <p>{item.text}</p> : <MarkdownContent>{item.text}</MarkdownContent>}
         {hasProducts && (
           <section className="results" aria-label="Products returned by the assistant">
             <div className="results__header">
